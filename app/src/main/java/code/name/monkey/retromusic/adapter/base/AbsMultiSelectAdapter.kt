@@ -17,7 +17,7 @@ abstract class AbsMultiSelectAdapter<V : RecyclerView.ViewHolder?, I>(
     open val activity: FragmentActivity, @MenuRes menuRes: Int,
 ) : RecyclerView.Adapter<V>(), ActionMode.Callback {
     var actionMode: ActionMode? = null
-    private val checked: MutableList<I>
+    private val checked: MutableList<I> = ArrayList()
     private var menuRes: Int
 
     override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -35,7 +35,7 @@ abstract class AbsMultiSelectAdapter<V : RecyclerView.ViewHolder?, I>(
             checkAll()
         } else {
             onMultipleItemAction(item!!, ArrayList(checked))
-            actionMode?.finish()
+            maybeFinishActionMode()
             clearChecked()
         }
         return true
@@ -49,6 +49,7 @@ abstract class AbsMultiSelectAdapter<V : RecyclerView.ViewHolder?, I>(
             else -> Color.BLACK
         }
         actionMode = null
+        maybeFinishActionMode()
         onBackPressedCallback.remove()
     }
 
@@ -103,11 +104,12 @@ abstract class AbsMultiSelectAdapter<V : RecyclerView.ViewHolder?, I>(
                 customView = NumberRollViewBinding.inflate(activity.layoutInflater).root
             }
             activity.onBackPressedDispatcher.addCallback(onBackPressedCallback)
+            activity.supportFragmentManager.findFragmentById(R.id.miniPlayerFragment)?.view?.isClickable = false
         }
         val size = checked.size
         when {
             size <= 0 -> {
-                actionMode?.finish()
+                maybeFinishActionMode()
             }
             else -> {
                 actionMode?.customView?.findViewById<NumberRollView>(R.id.selection_mode_number)
@@ -117,16 +119,22 @@ abstract class AbsMultiSelectAdapter<V : RecyclerView.ViewHolder?, I>(
     }
 
     init {
-        checked = ArrayList()
         this.menuRes = menuRes
+    }
+
+    private fun maybeFinishActionMode(): Boolean {
+        activity.supportFragmentManager.findFragmentById(R.id.miniPlayerFragment)?.view?.isClickable = true
+        if (actionMode != null) {
+            actionMode?.finish()
+            return true
+        }
+        return false
     }
 
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
-            if (actionMode != null) {
-                actionMode?.finish()
+            if (maybeFinishActionMode())
                 remove()
-            }
         }
     }
 }
