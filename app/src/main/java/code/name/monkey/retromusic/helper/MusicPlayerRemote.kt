@@ -241,10 +241,14 @@ object MusicPlayerRemote : KoinComponent {
             // we should probably keep them in the queue even if they
             // decide to switch to a different album. (this is how spotify
             // does it)
-            val remainingManualQueueSongs = playingQueue.filterIndexed { i, it ->
-                i > position && queuedSongs.contains(it) }
-            queuedSongs.clear()
+            val remainingManualQueueSongs = ArrayList<Song>()
+            playingQueue.forEachIndexed { i, it ->
+                if (i > position && queuedSongs.contains(it) &&
+                    !remainingManualQueueSongs.contains(it))
+                    remainingManualQueueSongs.add(it)
+            }
 
+            queuedSongs.clear()
             musicService?.openQueue(queue, startPosition, startPlaying)
             playNext(remainingManualQueueSongs, quiet = true)
             setShuffleMode(shuffleMode)
@@ -306,6 +310,9 @@ object MusicPlayerRemote : KoinComponent {
     private val queuedSongs = ArraySet<Song>()
 
     fun playNext(song: Song): Boolean {
+        if (queuedSongs.contains(song))
+            return false
+
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
                 musicService?.addSong(position + 1, song)
@@ -324,14 +331,15 @@ object MusicPlayerRemote : KoinComponent {
     @SuppressLint("StringFormatInvalid")
     fun playNext(songs: List<Song>, quiet: Boolean = false): Boolean {
         if (musicService != null) {
+            val allNewSongs = songs.filter { !queuedSongs.contains(it) }
             if (playingQueue.isNotEmpty()) {
                 if (position + 1 > playingQueue.lastIndex) {
-                    musicService?.addSongs(songs)
+                    musicService?.addSongs(allNewSongs)
                 } else {
-                    musicService?.addSongs(position + 1, songs)
+                    musicService?.addSongs(position + 1, allNewSongs)
                 }
 
-                queuedSongs.addAll(songs)
+                queuedSongs.addAll(allNewSongs)
             } else {
                 openQueue(songs, 0, false)
                 queuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
@@ -339,10 +347,8 @@ object MusicPlayerRemote : KoinComponent {
 
             if (!quiet) {
                 val toast =
-                    if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue) else musicService!!.resources.getString(
-                        R.string.added_x_titles_to_playing_queue,
-                        songs.size
-                    )
+                    if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue)
+                    else musicService!!.resources.getString(R.string.added_x_titles_to_playing_queue, songs.size)
                 musicService?.showToast(toast, Toast.LENGTH_SHORT)
             }
 
@@ -352,6 +358,9 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     fun enqueue(song: Song): Boolean {
+        if (queuedSongs.contains(song))
+            return false
+
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
                 musicService?.addSong(song)
@@ -370,17 +379,20 @@ object MusicPlayerRemote : KoinComponent {
     fun enqueue(songs: List<Song>): Boolean {
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
-                musicService?.addSongs(songs)
-                queuedSongs.addAll(songs)
+                val allNewSongs = songs.filter { !queuedSongs.contains(it) }
+                musicService?.addSongs(allNewSongs)
+                queuedSongs.addAll(allNewSongs)
             } else {
                 openQueue(songs, 0, false)
                 queuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
             }
+
             val toast =
                 if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue) else musicService!!.resources.getString(
                     R.string.added_x_titles_to_playing_queue,
                     songs.size
                 )
+
             musicService?.showToast(toast)
             return true
         }
