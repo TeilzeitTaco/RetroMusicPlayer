@@ -21,8 +21,8 @@ android {
         }
 
         applicationId = namespace
-        versionCode = 10650
-        versionName = "6.5.0"
+        versionCode = 10651
+        versionName = "6.5.0-elena-edit"
 
         buildConfigField("String", "GOOGLE_PLAY_LICENSING_KEY", "\"${getProperty(getProperties("../public.properties"), "GOOGLE_PLAY_LICENSE_KEY")}\"")
     }
@@ -135,8 +135,7 @@ dependencies {
     "normalImplementation"(libs.google.play.review)
     "normalImplementation"(libs.google.play.billing)
 
-
-            implementation(libs.android.material)
+    implementation(libs.android.material)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)

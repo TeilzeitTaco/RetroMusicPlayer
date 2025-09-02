@@ -37,6 +37,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -393,10 +394,11 @@ class MusicService : MediaBrowserServiceCompat(),
         }
     }
 
+    @RequiresApi(VERSION_CODES.N)
     fun clearQueue() {
-        playingQueue.clear()
-        originalPlayingQueue.clear()
-        setPosition(-1)
+        playingQueue.removeIf { song -> song !== currentSong }
+        originalPlayingQueue.removeIf { song -> song !== currentSong }
+        position = 0
         notifyChange(QUEUE_CHANGED)
     }
 
@@ -604,8 +606,6 @@ class MusicService : MediaBrowserServiceCompat(),
         clientUid: Int,
         rootHints: Bundle?,
     ): BrowserRoot {
-
-
         // Check origin to ensure we're not allowing any arbitrary app to browse app contents
         return if (!mPackageValidator!!.isKnownCaller(clientPackageName, clientUid)) {
             // Request from an untrusted package: return an empty browser root

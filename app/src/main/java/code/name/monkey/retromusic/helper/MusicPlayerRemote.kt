@@ -22,6 +22,7 @@ import android.net.Uri
 import android.os.IBinder
 import android.provider.DocumentsContract
 import android.widget.Toast
+import androidx.collection.ArraySet
 import androidx.core.content.ContextCompat
 import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.extensions.showToast
@@ -236,7 +237,16 @@ object MusicPlayerRemote : KoinComponent {
                 startPlaying
             ) && musicService != null
         ) {
+            // if there are songs the user manually added to the queue,
+            // we should probably keep them in the queue even if they
+            // decide to switch to a different album. (this is how spotify
+            // does it)
+            val remainingManualQueueSongs = playingQueue.filterIndexed { i, it ->
+                i > position && queuedSongs.contains(it) }
+            queuedSongs.clear()
+
             musicService?.openQueue(queue, startPosition, startPlaying)
+            playNext(remainingManualQueueSongs, quiet = true)
             setShuffleMode(shuffleMode)
         }
     }
@@ -293,10 +303,13 @@ object MusicPlayerRemote : KoinComponent {
         return false
     }
 
+    private val queuedSongs = ArraySet<Song>()
+
     fun playNext(song: Song): Boolean {
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
                 musicService?.addSong(position + 1, song)
+                queuedSongs.add(song)
             } else {
                 val queue = ArrayList<Song>()
                 queue.add(song)
@@ -309,19 +322,30 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     @SuppressLint("StringFormatInvalid")
-    fun playNext(songs: List<Song>): Boolean {
+    fun playNext(songs: List<Song>, quiet: Boolean = false): Boolean {
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
-                musicService?.addSongs(position + 1, songs)
+                if (position + 1 > playingQueue.lastIndex) {
+                    musicService?.addSongs(songs)
+                } else {
+                    musicService?.addSongs(position + 1, songs)
+                }
+
+                queuedSongs.addAll(songs)
             } else {
                 openQueue(songs, 0, false)
+                queuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
             }
-            val toast =
-                if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue) else musicService!!.resources.getString(
-                    R.string.added_x_titles_to_playing_queue,
-                    songs.size
-                )
-            musicService?.showToast(toast, Toast.LENGTH_SHORT)
+
+            if (!quiet) {
+                val toast =
+                    if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue) else musicService!!.resources.getString(
+                        R.string.added_x_titles_to_playing_queue,
+                        songs.size
+                    )
+                musicService?.showToast(toast, Toast.LENGTH_SHORT)
+            }
+
             return true
         }
         return false
@@ -331,6 +355,7 @@ object MusicPlayerRemote : KoinComponent {
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
                 musicService?.addSong(song)
+                queuedSongs.add(song)
             } else {
                 val queue = ArrayList<Song>()
                 queue.add(song)
@@ -346,8 +371,10 @@ object MusicPlayerRemote : KoinComponent {
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
                 musicService?.addSongs(songs)
+                queuedSongs.addAll(songs)
             } else {
                 openQueue(songs, 0, false)
+                queuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
             }
             val toast =
                 if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue) else musicService!!.resources.getString(
@@ -364,6 +391,7 @@ object MusicPlayerRemote : KoinComponent {
     fun removeFromQueue(song: Song): Boolean {
         if (musicService != null) {
             musicService!!.removeSong(song)
+            queuedSongs.remove(song)
             return true
         }
         return false
@@ -373,6 +401,7 @@ object MusicPlayerRemote : KoinComponent {
     fun removeFromQueue(songs: List<Song>): Boolean {
         if (musicService != null) {
             musicService!!.removeSongs(songs)
+            queuedSongs.removeAll(songs)
             return true
         }
         return false
@@ -381,6 +410,7 @@ object MusicPlayerRemote : KoinComponent {
     fun removeFromQueue(position: Int): Boolean {
         if (musicService != null && position >= 0 && position < playingQueue.size) {
             musicService!!.removeSong(position)
+            queuedSongs.remove(playingQueue[position])
             return true
         }
         return false
@@ -395,6 +425,7 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     fun clearQueue(): Boolean {
+        queuedSongs.clear()
         if (musicService != null) {
             musicService!!.clearQueue()
             return true
