@@ -213,16 +213,26 @@ open class SongAdapter(
         }
 
         override fun onClick(v: View?) {
-            if (isInQuickSelectMode) {
+            // if we are not playing, a tap is enough, if we are playing,
+            // a long press is needed
+            if (isInQuickSelectMode || MusicPlayerRemote.isPlaying) {
+                // this is not what people are used to, but it's just better.
+                // now you can no longer accidentally play a song.
                 toggleChecked(layoutPosition)
-            } else {
-                MusicPlayerRemote.openQueueKeepShuffleMode(dataSet, layoutPosition, true)
+                return
             }
+
+            MusicPlayerRemote.openQueueKeepShuffleMode(dataSet, layoutPosition, true)
         }
 
         override fun onLongClick(v: View?): Boolean {
-            println("Long click")
-            return toggleChecked(layoutPosition)
+            if (MusicPlayerRemote.isPlaying) {
+                MusicPlayerRemote.openQueueKeepShuffleMode(dataSet, layoutPosition, true)
+                return true
+            }
+
+            toggleChecked(layoutPosition)
+            return true
         }
     }
 
