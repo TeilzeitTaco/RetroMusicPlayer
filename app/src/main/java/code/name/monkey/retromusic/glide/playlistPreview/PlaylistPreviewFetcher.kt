@@ -42,7 +42,7 @@ class PlaylistPreviewFetcher(val context: Context, private val playlistPreview: 
 }
 
 private val glideDispatcher: CoroutineDispatcher by lazy {
-    Executors.newFixedThreadPool(4).asCoroutineDispatcher()
+    Executors.newFixedThreadPool(8).asCoroutineDispatcher()
 }
 
 @Suppress("FunctionName")
