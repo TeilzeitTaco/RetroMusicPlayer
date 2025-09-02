@@ -397,7 +397,10 @@ class MusicService : MediaBrowserServiceCompat(),
     @RequiresApi(VERSION_CODES.N)
     fun clearQueue() {
         playingQueue.removeIf { song -> song !== currentSong }
+        while (playingQueue.size > 1) playingQueue.removeFirst()
         originalPlayingQueue.removeIf { song -> song !== currentSong }
+        while (originalPlayingQueue.size > 1) originalPlayingQueue.removeFirst()
+
         position = 0
         notifyChange(QUEUE_CHANGED)
     }

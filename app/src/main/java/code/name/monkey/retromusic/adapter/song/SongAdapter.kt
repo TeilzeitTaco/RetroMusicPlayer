@@ -226,12 +226,16 @@ open class SongAdapter(
         }
 
         override fun onLongClick(v: View?): Boolean {
-            if (MusicPlayerRemote.isPlaying) {
-                MusicPlayerRemote.openQueueKeepShuffleMode(dataSet, layoutPosition, true)
-                return true
+            if (isChecked(getIdentifier(layoutPosition)!!)) {
+                onActionItemClicked(actionMode, actionMode!!.menu!!.findItem(R.id.action_play_next))
+            } else {
+                if (MusicPlayerRemote.isPlaying) {
+                    MusicPlayerRemote.openQueueKeepShuffleMode(dataSet, layoutPosition, true)
+                } else {
+                    toggleChecked(layoutPosition)
+                }
             }
 
-            toggleChecked(layoutPosition)
             return true
         }
     }
