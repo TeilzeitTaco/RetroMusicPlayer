@@ -210,7 +210,6 @@ object MusicUtil : KoinComponent {
         return ContentUris.withAppendedId(sArtworkUri, albumId)
     }
 
-
     fun getPlaylistInfoString(
         context: Context,
         songs: List<Song>,
