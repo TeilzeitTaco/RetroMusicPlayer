@@ -20,8 +20,12 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import androidx.core.graphics.drawable.toBitmap
 import code.name.monkey.appthemehelper.util.MaterialValueHelper
 import code.name.monkey.appthemehelper.util.VersionUtils
@@ -53,6 +57,7 @@ class AppWidgetCard : BaseAppWidget() {
     override fun defaultAppWidget(context: Context, appWidgetIds: IntArray) {
         val appWidgetView = RemoteViews(context.packageName, R.layout.app_widget_card)
 
+        appWidgetView.setViewVisibility(R.id.linear_layout, View.INVISIBLE)
         appWidgetView.setViewVisibility(R.id.media_titles, View.INVISIBLE)
         appWidgetView.setImageViewResource(R.id.image, R.drawable.default_audio_art)
         val secondaryColor = MaterialValueHelper.getSecondaryTextColor(context, true)
@@ -82,13 +87,27 @@ class AppWidgetCard : BaseAppWidget() {
         pushUpdate(context, appWidgetIds, appWidgetView)
     }
 
+    private val handler = Handler(Looper.getMainLooper())
+
     /**
      * Update all active widget instances by pushing changes
      */
+    @RequiresApi(Build.VERSION_CODES.P)
     override fun performUpdate(service: MusicService, appWidgetIds: IntArray?) {
         val appWidgetView = RemoteViews(service.packageName, R.layout.app_widget_card)
 
         val isPlaying = service.isPlaying
+        if (!isPlaying) {
+            // hide widget in a few seconds if we don't start playing again
+            handler.postDelayed({
+                appWidgetView.setViewVisibility(R.id.linear_layout, View.INVISIBLE)
+                pushUpdate(service, appWidgetIds, appWidgetView)
+            }, "HIDE", 7_000)
+        } else {
+            appWidgetView.setViewVisibility(R.id.linear_layout, View.VISIBLE)
+            handler.removeCallbacksAndMessages("HIDE")
+        }
+
         val song = service.currentSong
 
         // Set the titles and artwork
