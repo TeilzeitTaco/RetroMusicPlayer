@@ -222,7 +222,7 @@ class SearchAdapter(
                 }
 
                 SONG -> {
-                    MusicPlayerRemote.playNext(item as Song)
+                    MusicPlayerRemote.playNext(item as Song, quiet = true)
                     MusicPlayerRemote.playNextSong()
                 }
             }

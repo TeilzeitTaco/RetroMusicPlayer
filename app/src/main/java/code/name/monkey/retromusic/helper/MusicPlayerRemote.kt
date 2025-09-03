@@ -42,13 +42,15 @@ import kotlin.collections.set
 object MusicPlayerRemote : KoinComponent {
     val TAG: String = MusicPlayerRemote::class.java.simpleName
     private val mConnectionMap = WeakHashMap<Context, ServiceBinder>()
+    private val queuedSongs = ArraySet<Song>()
+
     var musicService: MusicService? = null
 
     private val songRepository by inject<SongRepository>()
 
     @JvmStatic
     val isPlaying: Boolean
-        get() = musicService != null && musicService!!.isPlaying
+        get() = isServiceConnected && musicService!!.isPlaying
 
     fun isPlaying(song: Song): Boolean {
         return if (!isPlaying) {
@@ -57,54 +59,54 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     val currentSong: Song
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService!!.currentSong
         } else Song.emptySong
 
     val nextSong: Song?
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService?.nextSong
         } else Song.emptySong
 
     var position: Int
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService!!.position
         } else -1
         set(position) {
-            if (musicService != null) {
+            if (isServiceConnected) {
                 musicService!!.position = position
             }
         }
 
     @JvmStatic
     val playingQueue: List<Song>
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService?.playingQueue as List<Song>
         } else listOf()
 
     val songProgressMillis: Int
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService!!.songProgressMillis
         } else -1
 
     val songDurationMillis: Int
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService!!.songDurationMillis
         } else -1
 
     val repeatMode: Int
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService!!.repeatMode
         } else MusicService.REPEAT_MODE_NONE
 
     @JvmStatic
     val shuffleMode: Int
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService!!.shuffleMode
         } else MusicService.SHUFFLE_MODE_NONE
 
     val audioSessionId: Int
-        get() = if (musicService != null) {
+        get() = if (isServiceConnected) {
             musicService!!.audioSessionId
         } else -1
 
@@ -307,22 +309,28 @@ object MusicPlayerRemote : KoinComponent {
         return false
     }
 
-    private val queuedSongs = ArraySet<Song>()
-
-    fun playNext(song: Song): Boolean {
+    fun playNext(song: Song, quiet: Boolean = false): Boolean {
         if (queuedSongs.contains(song))
             return false
 
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
-                musicService?.addSong(position + 1, song)
+                if (position + 1 > playingQueue.lastIndex) {
+                    musicService?.addSong(song)
+                } else {
+                    musicService?.addSong(position + 1, song)
+                }
+
                 queuedSongs.add(song)
             } else {
                 val queue = ArrayList<Song>()
                 queue.add(song)
                 openQueue(queue, 0, false)
             }
-            musicService?.showToast(R.string.added_title_to_playing_queue)
+
+            if (!quiet)
+                musicService?.showToast(R.string.added_title_to_playing_queue)
+
             return true
         }
         return false
