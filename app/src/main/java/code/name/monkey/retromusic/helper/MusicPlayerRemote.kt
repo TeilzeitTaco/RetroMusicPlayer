@@ -44,6 +44,11 @@ object MusicPlayerRemote : KoinComponent {
     private val mConnectionMap = WeakHashMap<Context, ServiceBinder>()
     private val queuedSongs = ArraySet<Song>()
 
+    private fun normalizeQueuedSongs() {
+        val oldQueue = playingQueue.filterIndexed { i, _ -> i < position }
+        queuedSongs.removeIf { oldQueue.contains(it) }
+    }
+
     var musicService: MusicService? = null
 
     private val songRepository by inject<SongRepository>()
@@ -310,6 +315,7 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     fun playNext(song: Song, quiet: Boolean = false): Boolean {
+        normalizeQueuedSongs()
         if (queuedSongs.contains(song))
             return false
 
@@ -338,9 +344,11 @@ object MusicPlayerRemote : KoinComponent {
 
     @SuppressLint("StringFormatInvalid")
     fun playNext(songs: List<Song>, quiet: Boolean = false): Boolean {
+        normalizeQueuedSongs()
+
         if (musicService != null) {
-            val allNewSongs = songs.filter { !queuedSongs.contains(it) }
             if (playingQueue.isNotEmpty()) {
+                val allNewSongs = songs.filter { !queuedSongs.contains(it) }
                 if (position + 1 > playingQueue.lastIndex) {
                     musicService?.addSongs(allNewSongs)
                 } else {
@@ -366,6 +374,7 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     fun enqueue(song: Song): Boolean {
+        normalizeQueuedSongs()
         if (queuedSongs.contains(song))
             return false
 
@@ -383,6 +392,7 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     fun enqueue(songs: List<Song>): Boolean {
+        normalizeQueuedSongs()
         if (musicService != null) {
             if (playingQueue.isNotEmpty()) {
                 val allNewSongs = songs.filter { !queuedSongs.contains(it) }
