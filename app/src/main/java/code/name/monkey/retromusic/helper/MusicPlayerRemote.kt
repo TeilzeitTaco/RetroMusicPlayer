@@ -374,9 +374,7 @@ object MusicPlayerRemote : KoinComponent {
                 musicService?.addSong(song)
                 queuedSongs.add(song)
             } else {
-                val queue = ArrayList<Song>()
-                queue.add(song)
-                openQueue(queue, 0, false)
+                openQueue(arrayListOf(song), 0, false)
             }
             musicService?.showToast(R.string.added_title_to_playing_queue)
             return true
