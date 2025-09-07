@@ -27,17 +27,19 @@ import code.name.monkey.appthemehelper.util.ColorUtil
 import code.name.monkey.appthemehelper.util.TintHelper
 import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.databinding.FragmentColorPlayerPlaybackControlsBinding
-import code.name.monkey.retromusic.extensions.applyColor
 import code.name.monkey.retromusic.extensions.getSongInfo
 import code.name.monkey.retromusic.extensions.hide
 import code.name.monkey.retromusic.extensions.show
+import code.name.monkey.retromusic.extensions.uri
 import code.name.monkey.retromusic.fragments.base.AbsPlayerControlsFragment
 import code.name.monkey.retromusic.fragments.base.goToAlbum
 import code.name.monkey.retromusic.fragments.base.goToArtist
 import code.name.monkey.retromusic.helper.MusicPlayerRemote
 import code.name.monkey.retromusic.util.PreferenceUtil
 import code.name.monkey.retromusic.util.color.MediaNotificationProcessor
-import com.google.android.material.slider.Slider
+import com.masoudss.lib.SeekBarOnProgressChanged
+import com.masoudss.lib.WaveformSeekBar
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 class ColorPlaybackControlsFragment :
@@ -45,9 +47,6 @@ class ColorPlaybackControlsFragment :
 
     private var _binding: FragmentColorPlayerPlaybackControlsBinding? = null
     private val binding get() = _binding!!
-
-    override val progressSlider: Slider
-        get() = binding.progressSlider
 
     override val shuffleButton: ImageButton
         get() = binding.shuffleButton
@@ -81,11 +80,28 @@ class ColorPlaybackControlsFragment :
             goToArtist(requireActivity())
         }
     }
-
+    
     private fun updateSong() {
         val song = MusicPlayerRemote.currentSong
         binding.title.text = song.title
         binding.text.text = song.artistName
+        
+        view?.postDelayed({
+            // this takes a moment
+            binding.progressSlider.setSampleFrom(song.uri)
+        }, 300)
+        
+        binding.progressSlider.onProgressChanged = object : SeekBarOnProgressChanged {
+            override fun onProgressChanged(
+                waveformSeekBar: WaveformSeekBar,
+                progress: Float,
+                fromUser: Boolean
+            ) {
+                if (fromUser) {
+                    MusicPlayerRemote.seekTo(progress.roundToInt())
+                }
+            }
+        }
 
         if (PreferenceUtil.isSongInfo) {
             binding.songInfo.text = getSongInfo(song)
@@ -119,10 +135,18 @@ class ColorPlaybackControlsFragment :
         updateShuffleState()
     }
 
+    override fun onUpdateProgressViews(progress: Int, total: Int) {
+        super.onUpdateProgressViews(progress, total)
+        binding.progressSlider.maxProgress = total.toFloat()
+        binding.progressSlider.progress = progress.toFloat()
+    }
+
     override fun setColor(color: MediaNotificationProcessor) {
         TintHelper.setTintAuto(binding.playPauseButton, color.primaryTextColor, true)
         TintHelper.setTintAuto(binding.playPauseButton, color.backgroundColor, false)
-        binding.progressSlider.applyColor(color.primaryTextColor)
+
+        binding.progressSlider.waveBackgroundColor = color.palette?.getMutedColor(0) ?: 0
+        binding.progressSlider.waveProgressColor = color.primaryTextColor
 
         binding.title.setTextColor(color.primaryTextColor)
         binding.text.setTextColor(color.secondaryTextColor)

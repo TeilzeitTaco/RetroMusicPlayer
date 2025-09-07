@@ -106,6 +106,11 @@ dependencies {
     implementation("jp.wasabeef:glide-transformations:4.3.0")
     implementation("jp.co.cyberagent.android:gpuimage:2.1.0")
 
+    implementation("com.github.massoudss:waveformSeekBar:5.0.2")
+    // Amplitude will allow you to call setSampleFrom() with files, URLs, Uri and resources
+    // Important: Only works with api level 21 and higher
+    implementation("com.github.lincollincol:amplituda:2.2.2")
+
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.constraintLayout)

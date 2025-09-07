@@ -104,9 +104,9 @@ abstract class AbsPlayerControlsFragment(@LayoutRes layout: Int) : AbsMusicServi
     }
 
     private fun setUpProgressSlider() {
-        progressSlider?.addOnChangeListener(Slider.OnChangeListener { _, value, fromUser ->
+        progressSlider?.addOnChangeListener { _, value, fromUser ->
             onProgressChange(value.toInt(), fromUser)
-        })
+        }
         progressSlider?.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) {
                 onStartTrackingTouch()

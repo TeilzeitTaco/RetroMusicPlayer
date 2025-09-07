@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:gravity="center"
-        android:minWidth="40dp"
+        android:width="50dp"
         android:singleLine="true"
         android:textColor="?android:attr/textColorSecondary"
         app:layout_constraintBottom_toBottomOf="@+id/progressSlider"
@@ -21,19 +21,38 @@
         app:layout_constraintTop_toTopOf="@id/progressSlider"
         tools:text="@tools:sample/date/hhmmss" />
 
-    <com.google.android.material.slider.Slider
-        android:id="@+id/progressSlider"
+    <com.masoudss.lib.WaveformSeekBar
+        app:wave_progress="33"
+        app:wave_max_progress="100"
+        app:wave_width="5dp"
+        app:wave_gap="2dp"
+        app:wave_min_height="5dp"
+        app:wave_corner_radius="3dp"
+        app:wave_gravity="center"
+
+        app:wave_padding_top="2dp"
+        app:wave_padding_Bottom="2dp"
+        app:wave_padding_right="2dp"
+        app:wave_padding_left="2dp"
+
+        app:wave_visible_progress="0"
+        app:marker_color="@color/md_red_400"
+        app:marker_width="1dp"
+        app:marker_text_padding="2dp"
+        app:marker_text_size="12dp"
+
+        android:layout_height="75dp"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+
+        android:id="@+id/progressSlider"
         android:layout_marginTop="8dp"
-        android:maxHeight="2dp"
-        style="@style/Widget.Retro.Slider"
-        android:progressDrawable="@drawable/color_progress_seek"
+
+        android:paddingLeft="6dp"
+        android:paddingRight="6dp"
+
         app:layout_constraintEnd_toStartOf="@id/songTotalTime"
         app:layout_constraintStart_toEndOf="@id/songCurrentProgress"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="RtlHardcoded,UnusedAttribute"
-        tools:progress="20" />
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/songTotalTime"
@@ -41,7 +60,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:gravity="center"
-        android:minWidth="40dp"
+        android:width="50dp"
         android:singleLine="true"
         android:textColor="?android:attr/textColorSecondary"
         app:layout_constraintBottom_toBottomOf="@+id/progressSlider"

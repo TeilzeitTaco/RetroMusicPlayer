@@ -148,9 +148,10 @@ public class MediaNotificationProcessor {
     getPaletteAsync(onPaletteLoadedListener, this.drawable);
   }
 
+  public Palette palette = null;
+
   /** Processes a drawable and calculates the appropriate colors that should be used. */
   private void getMediaPalette() {
-    Bitmap bitmap;
     if (drawable != null) {
       // We're transforming the builder, let's make sure all baked in RemoteViews are
       // rebuilt!
@@ -163,7 +164,7 @@ public class MediaNotificationProcessor {
         width = (int) (factor * width);
         height = (int) (factor * height);
       }
-      bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+      Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
       Canvas canvas = new Canvas(bitmap);
       drawable.setBounds(0, 0, width, height);
       drawable.draw(canvas);
@@ -175,7 +176,7 @@ public class MediaNotificationProcessor {
                       .setRegion(0, 0, bitmap.getWidth() / 2, bitmap.getHeight())
                       .clearFilters() // we want all colors, red / white / black ones too!
                       .resizeBitmapArea(RESIZE_BITMAP_AREA);
-      Palette palette;
+
       backgroundColor = findBackgroundColorAndFilter(drawable);
       // we want most of the full region again, slightly shifted to the right
       float textColorStartWidthFraction = 0.4f;
