@@ -16,6 +16,7 @@ package code.name.monkey.retromusic.fragments.player.color
 
 import android.animation.Animator
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewAnimationUtils
@@ -23,6 +24,7 @@ import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import code.name.monkey.appthemehelper.util.ColorUtil
 import code.name.monkey.appthemehelper.util.TintHelper
 import code.name.monkey.retromusic.R
@@ -123,8 +125,15 @@ class ColorPlaybackControlsFragment :
         updateSong()
     }
 
-    override fun onPlayStateChanged() {
-        updatePlayPauseDrawableState()
+    private val onPlayStateChangedUpdater = Runnable { updatePlayPauseDrawableState() }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    override fun onPlayStateChanged() {  // simple debounce
+        with((view ?: return).handler!!) {
+            if (hasCallbacks(onPlayStateChangedUpdater))
+                removeCallbacks(onPlayStateChangedUpdater)
+            postDelayed(onPlayStateChangedUpdater, 80)
+        }
     }
 
     override fun onRepeatModeChanged() {
