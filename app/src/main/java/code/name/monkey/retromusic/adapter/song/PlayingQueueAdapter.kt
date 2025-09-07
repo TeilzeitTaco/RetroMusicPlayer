@@ -64,7 +64,7 @@ class PlayingQueueAdapter(
         val song = dataSet[position]
         holder.time?.text = MusicUtil.getReadableDurationString(song.duration)
         if (holder.itemViewType == HISTORY) {
-            setAlpha(holder, 0.45f * (position.toFloat() / current.toFloat()) + 0.10f)
+            setAlpha(holder, 0.45f * (position.toFloat() / current.toFloat()) + 0.165f)
         } else if (holder.itemViewType == CURRENT) {
             Glide.with(activity)
                 .asBitmapPalette()
@@ -72,8 +72,8 @@ class PlayingQueueAdapter(
                 .load(RetroGlideExtension.getSongModel(song))
                 .into(object : RetroMusicColoredTarget(holder.image!!) {
                     override fun onColorReady(colors: MediaNotificationProcessor) {
-                        holder.title?.setTextColor(colors.primaryTextColor)
-                        holder.text?.setTextColor(colors.secondaryTextColor)
+                        holder.title?.setTextColor(colors.secondaryTextColor)
+                        holder.text?.setTextColor(colors.primaryTextColor)
                         holder.itemView.setBackgroundColor(colors.backgroundColor)
                     }
                 })
@@ -111,12 +111,14 @@ class PlayingQueueAdapter(
     }
 
     private fun setAlpha(holder: SongAdapter.ViewHolder, alpha: Float) {
-        holder.image?.alpha = alpha
-        holder.title?.alpha = alpha
-        holder.text?.alpha = alpha
-        holder.paletteColorContainer?.alpha = alpha
-        holder.dragView?.alpha = alpha
-        holder.menu?.alpha = alpha
+        with(holder) {
+            image?.alpha = alpha
+            title?.alpha = alpha
+            text?.alpha = alpha
+            paletteColorContainer?.alpha = alpha
+            dragView?.alpha = alpha
+            menu?.alpha = alpha
+        }
     }
 
     override fun getPopupText(position: Int): String {
@@ -246,10 +248,7 @@ class PlayingQueueAdapter(
         override fun onSlideAnimationEnd() {
             // initializeSnackBar(adapter, position, activity, isPlaying)
             songToRemove = adapter.dataSet[position]
-            // If song removed was the playing song, then play the next song
-            if (isPlaying(songToRemove!!)) {
-                playNextSong()
-            }
+
             // Swipe animation is much smoother when we do the heavy lifting after it's completed
             adapter.setSongToRemove(songToRemove!!)
             removeFromQueue(songToRemove!!)

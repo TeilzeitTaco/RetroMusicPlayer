@@ -26,6 +26,7 @@ import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.Key
+import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
@@ -34,6 +35,8 @@ import com.bumptech.glide.request.target.Target.SIZE_ORIGINAL
 import com.bumptech.glide.request.transition.DrawableCrossFadeFactory
 import com.bumptech.glide.request.transition.Transition
 import com.bumptech.glide.signature.MediaStoreSignature
+import jp.wasabeef.glide.transformations.gpu.PixelationFilterTransformation
+import jp.wasabeef.glide.transformations.gpu.SepiaFilterTransformation
 import java.io.File
 
 
@@ -100,37 +103,48 @@ object RetroGlideExtension {
     fun <T> RequestBuilder<T>.artistImageOptions(
         artist: Artist
     ): RequestBuilder<T> {
-        return diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY_ARTIST)
+        return maybeAnonymize(diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY_ARTIST)
             .priority(Priority.LOW)
             .error(getDrawable(DEFAULT_ARTIST_IMAGE))
             .placeholder(getDrawable(DEFAULT_ARTIST_IMAGE))
             .override(SIZE_ORIGINAL, SIZE_ORIGINAL)
-            .signature(createSignature(artist))
+            .signature(createSignature(artist)))
+    }
+
+    fun <T> maybeAnonymize(options: RequestBuilder<T>): RequestBuilder<T> {
+        // this is mostly for fun (and for guilty pleasures)
+        if (PreferenceUtil.anonymizeAlbumArt)
+            return options
+                .transform(MultiTransformation(
+     PixelationFilterTransformation(30f),
+                    SepiaFilterTransformation(0.65f)
+                ))
+        return options
     }
 
     fun <T> RequestBuilder<T>.songCoverOptions(
         song: Song
     ): RequestBuilder<T> {
-        return diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY)
+        return maybeAnonymize(diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY)
             .error(getDrawable(DEFAULT_SONG_IMAGE))
             .placeholder(getDrawable(DEFAULT_SONG_IMAGE))
-            .signature(createSignature(song))
+            .signature(createSignature(song)))
     }
 
     fun <T> RequestBuilder<T>.simpleSongCoverOptions(
         song: Song
     ): RequestBuilder<T> {
-        return diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY)
-            .signature(createSignature(song))
+        return maybeAnonymize(diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY)
+            .signature(createSignature(song)))
     }
 
     fun <T> RequestBuilder<T>.albumCoverOptions(
         song: Song
     ): RequestBuilder<T> {
-        return diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY)
+        return maybeAnonymize(diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY)
             .error(ContextCompat.getDrawable(getContext(), DEFAULT_ALBUM_IMAGE))
             .placeholder(ContextCompat.getDrawable(getContext(), DEFAULT_ALBUM_IMAGE))
-            .signature(createSignature(song))
+            .signature(createSignature(song)))
     }
 
     fun <T> RequestBuilder<T>.userProfileOptions(

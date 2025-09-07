@@ -225,6 +225,11 @@ object PreferenceUtil {
             false
         )
 
+    val anonymizeAlbumArt
+        get() = sharedPreferences.getBoolean(
+            "anonymize_album_art", false
+        )
+
     val isVolumeVisibilityMode
         get() = sharedPreferences.getBoolean(
             TOGGLE_VOLUME, false

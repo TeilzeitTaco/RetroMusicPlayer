@@ -103,6 +103,9 @@ dependencies {
     implementation(project(":appthemehelper"))
     implementation(libs.gridLayout)
 
+    implementation("jp.wasabeef:glide-transformations:4.3.0")
+    implementation("jp.co.cyberagent.android:gpuimage:2.1.0")
+
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.constraintLayout)
