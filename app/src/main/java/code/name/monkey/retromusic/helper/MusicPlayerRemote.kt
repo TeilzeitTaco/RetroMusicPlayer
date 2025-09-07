@@ -45,7 +45,7 @@ object MusicPlayerRemote : KoinComponent {
     private val queuedSongs = ArraySet<Song>()
 
     private fun normalizeQueuedSongs() {
-        val oldQueue = playingQueue.filterIndexed { i, _ -> i < position }
+        val oldQueue = playingQueue.filterIndexed { i, _ -> i <= position }
         queuedSongs.removeIf { oldQueue.contains(it) }
     }
 
@@ -344,33 +344,35 @@ object MusicPlayerRemote : KoinComponent {
 
     @SuppressLint("StringFormatInvalid")
     fun playNext(songs: List<Song>, quiet: Boolean = false): Boolean {
+        var addedSongCount: Int
         normalizeQueuedSongs()
 
-        if (musicService != null) {
-            if (playingQueue.isNotEmpty()) {
-                val allNewSongs = songs.filter { !queuedSongs.contains(it) }
-                if (position + 1 > playingQueue.lastIndex) {
-                    musicService?.addSongs(allNewSongs)
-                } else {
-                    musicService?.addSongs(position + 1, allNewSongs)
-                }
+        musicService ?: return false
 
-                queuedSongs.addAll(allNewSongs)
+        if (playingQueue.isNotEmpty()) {
+            val allNewSongs = songs.filter { !queuedSongs.contains(it) }
+            if (position + 1 > playingQueue.lastIndex) {
+                musicService?.addSongs(allNewSongs)
             } else {
-                openQueue(songs, 0, false)
-                queuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
+                musicService?.addSongs(position + 1, allNewSongs)
             }
 
-            if (!quiet) {
-                val toast =
-                    if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue)
-                    else musicService!!.resources.getString(R.string.added_x_titles_to_playing_queue, songs.size)
-                musicService?.showToast(toast, Toast.LENGTH_SHORT)
-            }
-
-            return true
+            queuedSongs.addAll(allNewSongs)
+            addedSongCount = allNewSongs.size
+        } else {
+            openQueue(songs, 0, false)
+            queuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
+            addedSongCount = songs.size
         }
-        return false
+
+        if (!quiet) {
+            val toast =
+                if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue)
+                else musicService!!.resources.getString(R.string.added_x_titles_to_playing_queue, addedSongCount)
+            musicService?.showToast(toast, Toast.LENGTH_SHORT)
+        }
+
+        return true
     }
 
     fun enqueue(song: Song): Boolean {

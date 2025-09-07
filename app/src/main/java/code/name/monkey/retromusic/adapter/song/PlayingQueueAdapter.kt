@@ -16,11 +16,14 @@ package code.name.monkey.retromusic.adapter.song
 
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
 import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.glide.RetroGlideExtension
+import code.name.monkey.retromusic.glide.RetroGlideExtension.asBitmapPalette
 import code.name.monkey.retromusic.glide.RetroGlideExtension.songCoverOptions
+import code.name.monkey.retromusic.glide.RetroMusicColoredTarget
 import code.name.monkey.retromusic.helper.MusicPlayerRemote
 import code.name.monkey.retromusic.helper.MusicPlayerRemote.isPlaying
 import code.name.monkey.retromusic.helper.MusicPlayerRemote.playNextSong
@@ -28,6 +31,7 @@ import code.name.monkey.retromusic.helper.MusicPlayerRemote.removeFromQueue
 import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.util.MusicUtil
 import code.name.monkey.retromusic.util.ViewUtil
+import code.name.monkey.retromusic.util.color.MediaNotificationProcessor
 import com.bumptech.glide.Glide
 import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter
 import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange
@@ -59,8 +63,20 @@ class PlayingQueueAdapter(
         super.onBindViewHolder(holder, position)
         val song = dataSet[position]
         holder.time?.text = MusicUtil.getReadableDurationString(song.duration)
-        if (holder.itemViewType == HISTORY || holder.itemViewType == CURRENT) {
-            setAlpha(holder, 0.5f)
+        if (holder.itemViewType == HISTORY) {
+            setAlpha(holder, 0.45f * (position.toFloat() / current.toFloat()) + 0.10f)
+        } else if (holder.itemViewType == CURRENT) {
+            Glide.with(activity)
+                .asBitmapPalette()
+                .songCoverOptions(song)
+                .load(RetroGlideExtension.getSongModel(song))
+                .into(object : RetroMusicColoredTarget(holder.image!!) {
+                    override fun onColorReady(colors: MediaNotificationProcessor) {
+                        holder.title?.setTextColor(colors.primaryTextColor)
+                        holder.text?.setTextColor(colors.secondaryTextColor)
+                        holder.itemView.setBackgroundColor(colors.backgroundColor)
+                    }
+                })
         }
     }
 
@@ -154,11 +170,15 @@ class PlayingQueueAdapter(
         }
 
         override fun onClick(v: View?) {
-            if (isInQuickSelectMode) {
-                toggleChecked(layoutPosition)
-            } else {
+            if (!isPlaying)
                 MusicPlayerRemote.playSongAt(layoutPosition)
-            }
+            else
+                Toast.makeText(activity, "Press and hold to jump to song!", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onLongClick(v: View?): Boolean {
+            MusicPlayerRemote.playSongAt(layoutPosition)
+            return true
         }
 
         override fun onSongMenuItemClick(item: MenuItem): Boolean {
@@ -186,7 +206,6 @@ class PlayingQueueAdapter(
     }
 
     companion object {
-
         private const val HISTORY = 0
         private const val CURRENT = 1
         private const val UP_NEXT = 2
