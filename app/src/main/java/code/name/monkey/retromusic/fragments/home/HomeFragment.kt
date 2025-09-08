@@ -212,7 +212,7 @@ class HomeFragment :
             menu,
             ATHToolbarActivity.getToolbarBackgroundColor(binding.toolbar)
         )
-        //Setting up cast button
+        // Setting up cast button
         requireContext().setUpMediaRouteButton(menu)
     }
 

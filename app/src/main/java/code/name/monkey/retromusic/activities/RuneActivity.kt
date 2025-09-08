@@ -93,7 +93,7 @@ class RuneActivity : AbsThemeActivity() {
                         postDelayed({
                             clearPattern()
                             isInputEnabled = true
-                        }, 800)
+                        }, 725)
                     }
                 }
 
