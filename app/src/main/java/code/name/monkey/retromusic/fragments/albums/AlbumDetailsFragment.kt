@@ -367,7 +367,7 @@ class AlbumDetailsFragment : AbsMainActivityFragment(R.layout.fragment_album_det
         val songs = simpleSongAdapter.dataSet
         when (item.itemId) {
             R.id.action_reset_album_rune -> {
-                Toast.makeText(context, "Reset album rune!", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Album rune was reset!", Toast.LENGTH_LONG).show()
                 PreferenceUtil.clearRuneDataForAlbum(album.id)
             }
 

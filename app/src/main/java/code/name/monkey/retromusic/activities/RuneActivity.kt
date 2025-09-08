@@ -37,7 +37,7 @@ class RuneActivity : AbsThemeActivity() {
     @RequiresApi(Build.VERSION_CODES.M)
     private fun generateNewRuneForAlbum(): List<PatternLockView.Dot> {
         while(true) {
-            val rune = PatternCoder.findRandomDotPattern3x3(Random.nextInt(6, 8))
+            val rune = PatternCoder.findRandomDotPattern3x3(Random.nextInt(5, 8))
             val codedRune = PatternCoder.encodeDotsToString(rune)
 
             // check if rune unused
