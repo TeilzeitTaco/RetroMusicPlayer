@@ -3,6 +3,10 @@
     <dimen name="status_bar_padding">0dp</dimen>
     <dimen name="toolbar_elevation">4dp</dimen>
 
+    <dimen name="pattern_lock_path_width">3dp</dimen>
+    <dimen name="pattern_lock_dot_size">10dp</dimen>
+    <dimen name="pattern_lock_dot_selected_size">24dp</dimen>
+
     <dimen name="progress_container_height">20dp</dimen>
 
     <dimen name="tab_height">48dp</dimen>
