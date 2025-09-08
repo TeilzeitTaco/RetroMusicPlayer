@@ -19,6 +19,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.core.text.parseAsHtml
@@ -365,7 +366,13 @@ class AlbumDetailsFragment : AbsMainActivityFragment(R.layout.fragment_album_det
         var sortOrder: String? = null
         val songs = simpleSongAdapter.dataSet
         when (item.itemId) {
+            R.id.action_reset_album_rune -> {
+                Toast.makeText(context, "Reset album rune!", Toast.LENGTH_LONG).show()
+                PreferenceUtil.clearRuneDataForAlbum(album.id)
+            }
+
             android.R.id.home -> findNavController().navigateUp()
+
             R.id.action_play_next -> {
                 MusicPlayerRemote.playNext(songs)
                 return true

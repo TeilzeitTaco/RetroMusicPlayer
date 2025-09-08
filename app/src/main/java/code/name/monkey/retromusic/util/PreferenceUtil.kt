@@ -784,6 +784,16 @@ object PreferenceUtil {
     fun getAlbumRune(albumId: Long): String? {
         return sharedPreferences.getString("album-rune-$albumId", null)
     }
+
+    fun clearRuneDataForAlbum(albumId: Long) {
+        val codedRune = getAlbumRune(albumId)
+        if (codedRune != null) {
+            sharedPreferences.edit(commit = true) {
+                remove("rune-$codedRune")
+                remove("album-rune-$albumId")
+            }
+        }
+    }
 }
 
 enum class CoverLyricsType {
