@@ -35,7 +35,16 @@ class RuneActivity : AbsThemeActivity() {
     private lateinit var binding: ActivityRuneBinding
 
     @RequiresApi(Build.VERSION_CODES.M)
-    private fun generateNewRuneForAlbum() = PatternCoder.findRandomDotPattern3x3(Random.nextInt(6, 8))
+    private fun generateNewRuneForAlbum(): List<PatternLockView.Dot> {
+        while(true) {
+            val rune = PatternCoder.findRandomDotPattern3x3(Random.nextInt(6, 8))
+            val codedRune = PatternCoder.encodeDotsToString(rune)
+
+            // check if rune unused
+            if (PreferenceUtil.getAlbumForRune(codedRune) == 0L)
+                return rune
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,7 +102,7 @@ class RuneActivity : AbsThemeActivity() {
                         postDelayed({
                             clearPattern()
                             isInputEnabled = true
-                        }, 725)
+                        }, 650)
                     }
                 }
 
