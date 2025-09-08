@@ -86,7 +86,6 @@
         <menu></menu>
     </item>
     <item
-        android:orderInCategory="10"
         android:id="@+id/action_settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/action_settings"
@@ -95,5 +94,10 @@
         android:id="@+id/action_cast"
         android:title="@string/action_cast"
         app:actionProviderClass="androidx.mediarouter.app.MediaRouteActionProvider"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_runes"
+        android:icon="@drawable/ic_album"
+        android:title="Rune Console"
         app:showAsAction="always" />
 </menu>

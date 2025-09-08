@@ -13,8 +13,10 @@
  */
 package code.name.monkey.retromusic.activities
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import androidx.annotation.RequiresApi
 import code.name.monkey.appthemehelper.util.ToolbarContentTintHelper
@@ -25,6 +27,7 @@ import code.name.monkey.retromusic.patternlockview.PatternLockView.AspectRatio
 import code.name.monkey.retromusic.patternlockview.PatternLockView.PatternViewMode.AUTO_DRAW
 import code.name.monkey.retromusic.patternlockview.listener.PatternLockViewListener
 import code.name.monkey.retromusic.patternlockview.utils.PatternCoder
+import code.name.monkey.retromusic.util.PreferenceUtil
 import kotlin.random.Random
 
 
@@ -32,7 +35,7 @@ class RuneActivity : AbsThemeActivity() {
     private lateinit var binding: ActivityRuneBinding
 
     @RequiresApi(Build.VERSION_CODES.M)
-    private fun generateNewRuneForAlbum() = PatternCoder.findRandomDotPattern3x3(Random.nextInt(5, 7))
+    private fun generateNewRuneForAlbum() = PatternCoder.findRandomDotPattern3x3(Random.nextInt(6, 8))
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,8 +48,28 @@ class RuneActivity : AbsThemeActivity() {
 
         with(binding.patternInput) {
             aspectRatio = AspectRatio.ASPECT_RATIO_SQUARE
-            isInputEnabled = false
-            setPattern(AUTO_DRAW, generateNewRuneForAlbum())
+
+            val albumId = intent.extras?.getLong("albumId")
+            if (albumId != null) {
+                // album view mode
+                // get the rune from sharedprefs if it exists; otherwise make a new one
+                val oldEncodedRune = PreferenceUtil.getAlbumRune(albumId)
+                var albumRune: List<PatternLockView.Dot>?
+                if (oldEncodedRune == null) {
+                    albumRune = generateNewRuneForAlbum()
+                    val newEncodedRune = PatternCoder.encodeDotsToString(albumRune)
+                    PreferenceUtil.setAlbumRune(albumId, newEncodedRune)
+                } else {
+                    Log.e("Runes", "got rune: \"$oldEncodedRune\"")
+                    albumRune = PatternCoder.decodeStringToDots(oldEncodedRune)
+                }
+
+                isInputEnabled = false
+                setPattern(AUTO_DRAW, albumRune)
+            } else {
+                // input mode by default
+                isInputEnabled = true
+            }
 
             addPatternLockListener(object : PatternLockViewListener {
                 override fun onStarted() {
@@ -56,6 +79,22 @@ class RuneActivity : AbsThemeActivity() {
                 }
 
                 override fun onComplete(pattern: List<PatternLockView.Dot>) {
+                    isInputEnabled = false
+                    val encodedPattern = PatternCoder.encodeDotsToString(pattern)
+                    val newAlbumId = PreferenceUtil.getAlbumForRune(encodedPattern)
+                    if (newAlbumId != 0L) {
+                        setViewMode(PatternLockView.PatternViewMode.CORRECT)
+                        setResult(420, Intent().apply {
+                            putExtra("albumId", newAlbumId)
+                        })
+                        finish()
+                    } else {
+                        setViewMode(PatternLockView.PatternViewMode.WRONG)
+                        postDelayed({
+                            clearPattern()
+                            isInputEnabled = true
+                        }, 800)
+                    }
                 }
 
                 override fun onCleared() {

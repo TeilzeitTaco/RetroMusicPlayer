@@ -381,6 +381,9 @@ class FoldersFragment : AbsMainActivityFragment(R.layout.fragment_folder),
     }
 
     override fun onMenuItemSelected(item: MenuItem): Boolean {
+        if (super.onMenuItemSelected(item))
+            return true
+
         when (item.itemId) {
             R.id.action_go_to_start_directory -> {
                 setCrumb(
@@ -398,15 +401,6 @@ class FoldersFragment : AbsMainActivityFragment(R.layout.fragment_folder),
                     showScanDialogSheet(crumb.file)
 
                 }
-                return true
-            }
-
-            R.id.action_settings -> {
-                findNavController().navigate(
-                    R.id.settings_fragment,
-                    null,
-                    navOptions
-                )
                 return true
             }
         }

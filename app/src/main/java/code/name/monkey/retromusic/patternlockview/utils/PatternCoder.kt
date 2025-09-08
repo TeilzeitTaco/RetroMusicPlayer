@@ -4,6 +4,7 @@ import android.os.Build
 import android.util.ArraySet
 import androidx.annotation.RequiresApi
 import code.name.monkey.retromusic.patternlockview.PatternLockView
+import com.afollestad.viewpagerdots.DotsIndicator
 import kotlin.random.Random
 
 object PatternCoder {
@@ -88,5 +89,13 @@ object PatternCoder {
     fun findRandomDotPattern3x3(length: Int): List<PatternLockView.Dot> {
         val pattern = findRandomPattern(3, length)
         return toDots(pattern)
+    }
+
+    fun encodeDotsToString(pattern: List<PatternLockView.Dot>): String {
+        return pattern.map { it.id }.joinToString(":")
+    }
+
+    fun decodeStringToDots(s: String): List<PatternLockView.Dot> {
+        return s.split(":").map { PatternLockView.Dot.of(it.toInt()) }
     }
 }

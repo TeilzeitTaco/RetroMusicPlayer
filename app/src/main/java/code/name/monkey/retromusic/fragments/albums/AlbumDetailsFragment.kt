@@ -36,7 +36,6 @@ import code.name.monkey.retromusic.EXTRA_ALBUM_ID
 import code.name.monkey.retromusic.EXTRA_ARTIST_ID
 import code.name.monkey.retromusic.EXTRA_ARTIST_NAME
 import code.name.monkey.retromusic.R
-import code.name.monkey.retromusic.activities.MainActivity
 import code.name.monkey.retromusic.activities.RuneActivity
 import code.name.monkey.retromusic.activities.tageditor.AbsTagEditorActivity
 import code.name.monkey.retromusic.activities.tageditor.AlbumTagEditorActivity
@@ -111,11 +110,6 @@ class AlbumDetailsFragment : AbsMainActivityFragment(R.layout.fragment_album_det
         mainActivity.addMusicServiceEventListener(detailsViewModel)
         mainActivity.setSupportActionBar(binding.toolbar)
 
-        binding.image.setOnLongClickListener {
-            startActivity(Intent(context, RuneActivity::class.java))
-            true
-        }
-
         binding.toolbar.title = " "
         binding.albumCoverContainer.transitionName = arguments.extraAlbumId.toString()
         postponeEnterTransition()
@@ -123,6 +117,14 @@ class AlbumDetailsFragment : AbsMainActivityFragment(R.layout.fragment_album_det
             view.doOnPreDraw {
                 startPostponedEnterTransition()
             }
+
+            binding.image.setOnLongClickListener {
+                startActivity(Intent(context, RuneActivity::class.java).apply {
+                    putExtra("albumId", album.id)
+                })
+                true
+            }
+
             albumArtistExists = !album.albumArtist.isNullOrEmpty()
             showAlbum(album)
             binding.artistImage.transitionName = if (albumArtistExists) {

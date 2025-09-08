@@ -769,6 +769,21 @@ object PreferenceUtil {
 
     val swipeDownToDismiss
         get() = sharedPreferences.getBoolean(SWIPE_DOWN_DISMISS, true)
+
+    fun setAlbumRune(albumId: Long, codedRune: String) {
+        sharedPreferences.edit(commit = true) {
+            putString("album-rune-$albumId", codedRune)
+            putLong("rune-$codedRune", albumId)
+        }
+    }
+
+    fun getAlbumForRune(codedRune: String): Long {
+        return sharedPreferences.getLong("rune-$codedRune", 0)
+    }
+
+    fun getAlbumRune(albumId: Long): String? {
+        return sharedPreferences.getString("album-rune-$albumId", null)
+    }
 }
 
 enum class CoverLyricsType {

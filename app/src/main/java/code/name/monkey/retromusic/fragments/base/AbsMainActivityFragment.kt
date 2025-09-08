@@ -14,13 +14,21 @@
  */
 package code.name.monkey.retromusic.fragments.base
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import androidx.annotation.LayoutRes
+import androidx.core.os.bundleOf
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
+import code.name.monkey.retromusic.EXTRA_ALBUM_ID
+import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.activities.MainActivity
+import code.name.monkey.retromusic.activities.RuneActivity
 import code.name.monkey.retromusic.fragments.LibraryViewModel
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
@@ -35,5 +43,39 @@ abstract class AbsMainActivityFragment(@LayoutRes layout: Int) : AbsMusicService
         super.onViewCreated(view, savedInstanceState)
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.STARTED)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == 420) {
+            val newAlbumId = data!!.getLongExtra("albumId", 0)
+            requireActivity().findNavController(R.id.fragment_container).navigate(
+                R.id.albumDetailsFragment,
+                bundleOf(EXTRA_ALBUM_ID to newAlbumId),
+                null,
+            )
+        }
+    }
+
+    override fun onMenuItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_runes -> {
+                startActivityForResult(
+                    Intent(context, RuneActivity::class.java), 420
+                )
+                return true
+            }
+
+            R.id.action_settings -> {
+                findNavController().navigate(
+                    R.id.settings_fragment,
+                    null,
+                    navOptions
+                )
+                return true
+            }
+        }
+
+        return false
     }
 }
