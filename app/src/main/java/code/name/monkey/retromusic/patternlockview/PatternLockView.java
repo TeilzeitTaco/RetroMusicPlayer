@@ -112,7 +112,7 @@ public class PatternLockView extends View {
     private int mPatternSize;
     private boolean mDrawingProfilingStarted = false;
     private long mAnimatingPeriodStart;
-    private float mHitFactor = 0.4f;
+    private float mHitFactor = 0.35f;
 
     // Made static so that the static inner class can use it
     private static int sDotCount;
