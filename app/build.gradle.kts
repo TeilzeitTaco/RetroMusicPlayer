@@ -109,7 +109,7 @@ dependencies {
     implementation("com.github.massoudss:waveformSeekBar:5.0.2")
     // Amplitude will allow you to call setSampleFrom() with files, URLs, Uri and resources
     // Important: Only works with api level 21 and higher
-    implementation("com.github.lincollincol:amplituda:2.2.2")
+    implementation("com.github.lincollincol:amplituda:2.3.0")
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.annotation)
