@@ -88,9 +88,14 @@ class ColorPlaybackControlsFragment :
         binding.title.text = song.title
         binding.text.text = song.artistName
         
-        view?.postDelayed({
-            // this takes a moment
-            binding.progressSlider.setSampleFrom(song.uri)
+        view?.postDelayed(object : Runnable {
+            override fun run() {
+                // this takes a moment
+                if (song.id != -1L)  // might be an invalid song
+                    binding.progressSlider.setSampleFrom(song.uri)
+                else
+                    view!!.postDelayed(this, 150)
+            }
         }, 300)
         
         binding.progressSlider.onProgressChanged = object : SeekBarOnProgressChanged {
