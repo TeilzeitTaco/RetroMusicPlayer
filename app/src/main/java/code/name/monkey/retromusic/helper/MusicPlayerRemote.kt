@@ -315,7 +315,7 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     private fun playNextImpl(song: Song) {
-        if (song == currentSong)
+        if (song.id == currentSong.id)
             return
 
         manuallyQueuedSongs.add(song)
@@ -376,7 +376,7 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     private fun enqueueImpl(song: Song) {
-        if (currentSong == song)
+        if (currentSong.id == song.id)
             return
 
         manuallyQueuedSongs.add(song)
