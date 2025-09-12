@@ -316,6 +316,9 @@ object MusicPlayerRemote : KoinComponent {
 
     private fun playNextImpl(song: Song) {
         manuallyQueuedSongs.add(song)
+        if (song == currentSong)
+            return
+
         if (playingQueue.contains(song)) {
             if (playingQueue.size == 1)
                 return
@@ -374,6 +377,9 @@ object MusicPlayerRemote : KoinComponent {
 
     private fun enqueueImpl(song: Song) {
         manuallyQueuedSongs.add(song)
+        if (currentSong == song)
+            return
+
         if (playingQueue.contains(song)) {
             if (playingQueue.size == 1)
                 return
