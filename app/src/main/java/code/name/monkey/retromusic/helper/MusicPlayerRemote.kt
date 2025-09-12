@@ -362,7 +362,7 @@ object MusicPlayerRemote : KoinComponent {
             openQueue(songs, 0, false)
             manuallyQueuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
         } else {
-            songs.forEach(::playNextImpl)
+            songs.reversed().forEach(::playNextImpl)
         }
 
         if (!quiet) {
