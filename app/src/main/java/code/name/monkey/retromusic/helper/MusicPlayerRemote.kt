@@ -318,7 +318,6 @@ object MusicPlayerRemote : KoinComponent {
         if (song.id == currentSong.id)
             return
 
-        manuallyQueuedSongs.add(song)
         if (playingQueue.contains(song)) {
             if (playingQueue.size == 1)
                 return
@@ -326,6 +325,7 @@ object MusicPlayerRemote : KoinComponent {
             removeFromQueue(song)
         }
 
+        manuallyQueuedSongs.add(song)
         insertOrAdd(song)
     }
 
@@ -362,7 +362,7 @@ object MusicPlayerRemote : KoinComponent {
             openQueue(songs, 0, false)
             manuallyQueuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
         } else {
-            songs.reversed().forEach(::playNextImpl)
+            songs.forEach(::playNextImpl)
         }
 
         if (!quiet) {
@@ -379,7 +379,6 @@ object MusicPlayerRemote : KoinComponent {
         if (currentSong.id == song.id)
             return
 
-        manuallyQueuedSongs.add(song)
         if (playingQueue.contains(song)) {
             if (playingQueue.size == 1)
                 return
@@ -387,6 +386,7 @@ object MusicPlayerRemote : KoinComponent {
             removeFromQueue(song)
         }
 
+        manuallyQueuedSongs.add(song)
         musicService?.addSong(song)
     }
 
@@ -408,11 +408,11 @@ object MusicPlayerRemote : KoinComponent {
         musicService ?: return false
         normalizeManuallyQueuedSongs()
 
-        if (playingQueue.isNotEmpty()) {
-            songs.forEach(::enqueueImpl)
-        } else {
+        if (playingQueue.isEmpty()) {
             openQueue(songs, 0, false)
             manuallyQueuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
+        } else {
+            songs.forEach(::enqueueImpl)
         }
 
         val toast =

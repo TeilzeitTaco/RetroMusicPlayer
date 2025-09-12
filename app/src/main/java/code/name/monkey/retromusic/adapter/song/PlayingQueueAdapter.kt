@@ -161,7 +161,6 @@ class PlayingQueueAdapter(
 
         override fun onLongClick(v: View?): Boolean {
             if (isChecked(getIdentifier(layoutPosition)!!)) {
-                MusicPlayerRemote.removeFromQueue(checked)
                 MusicPlayerRemote.playNext(checked, true)
                 Toast.makeText(activity, "Moved ${checked.size} tracks to top of queue!",
                     Toast.LENGTH_SHORT).show()
