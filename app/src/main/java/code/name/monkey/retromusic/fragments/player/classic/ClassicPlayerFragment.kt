@@ -371,12 +371,10 @@ class ClassicPlayerFragment : AbsPlayerFragment(R.layout.fragment_classic_player
     }
 
     private fun updateQueuePosition() {
-        playingQueueAdapter?.setCurrent(MusicPlayerRemote.position)
         resetToCurrentPosition()
     }
 
     private fun updateQueue() {
-        playingQueueAdapter?.swapDataSet(MusicPlayerRemote.playingQueue, MusicPlayerRemote.position)
         resetToCurrentPosition()
     }
 
@@ -441,8 +439,6 @@ class ClassicPlayerFragment : AbsPlayerFragment(R.layout.fragment_classic_player
     private fun setupRecyclerView() {
         playingQueueAdapter = PlayingQueueAdapter(
             requireActivity() as AppCompatActivity,
-            MusicPlayerRemote.playingQueue.toMutableList(),
-            MusicPlayerRemote.position,
             R.layout.item_queue
         )
         linearLayoutManager = LinearLayoutManager(requireContext())

@@ -417,7 +417,7 @@ class MusicService : MediaBrowserServiceCompat(),
         get() = playbackManager.audioSessionId
 
     val currentSong: Song
-        get() = getSongAt(getPosition())
+        get() = getSongAt(position)
 
     val nextSong: Song?
         get() = if (isLastTrack && repeatMode == REPEAT_MODE_NONE) {
@@ -427,7 +427,7 @@ class MusicService : MediaBrowserServiceCompat(),
         }
 
     private fun getNextPosition(force: Boolean): Int {
-        var position = getPosition() + 1
+        var position = position + 1
         when (repeatMode) {
             REPEAT_MODE_ALL -> if (isLastTrack) {
                 position = 0
@@ -452,10 +452,6 @@ class MusicService : MediaBrowserServiceCompat(),
         return position
     }
 
-    private fun getPosition(): Int {
-        return position
-    }
-
     private fun setPosition(position: Int) {
         openTrackAndPrepareNextAt(position) { success ->
             if (success) {
@@ -465,7 +461,7 @@ class MusicService : MediaBrowserServiceCompat(),
     }
 
     private fun getPreviousPosition(force: Boolean): Int {
-        var newPosition = getPosition() - 1
+        var newPosition = position - 1
         when (repeatMode) {
             REPEAT_MODE_ALL -> if (newPosition < 0) {
                 newPosition = playingQueue.size - 1
@@ -476,7 +472,7 @@ class MusicService : MediaBrowserServiceCompat(),
                     newPosition = playingQueue.size - 1
                 }
             } else {
-                newPosition = getPosition()
+                newPosition = position
             }
 
             REPEAT_MODE_NONE -> if (newPosition < 0) {
@@ -509,7 +505,7 @@ class MusicService : MediaBrowserServiceCompat(),
         when (shuffleMode) {
             SHUFFLE_MODE_SHUFFLE -> {
                 this.shuffleMode = shuffleMode
-                makeShuffleList(playingQueue, getPosition())
+                makeShuffleList(playingQueue, position)
                 position = 0
             }
 
@@ -560,7 +556,7 @@ class MusicService : MediaBrowserServiceCompat(),
     }
 
     private val isLastTrack: Boolean
-        get() = getPosition() == playingQueue.size - 1
+        get() = position == playingQueue.size - 1
 
     val isPlaying: Boolean
         get() = playbackManager.isPlaying
@@ -569,7 +565,7 @@ class MusicService : MediaBrowserServiceCompat(),
         if (from == to) {
             return
         }
-        val currentPosition = getPosition()
+        val currentPosition = position
         val songToMove = playingQueue.removeAt(from)
         playingQueue.add(to, songToMove)
         if (getShuffleMode() == SHUFFLE_MODE_NONE) {
@@ -803,7 +799,7 @@ class MusicService : MediaBrowserServiceCompat(),
 
     @Synchronized
     fun play() {
-        playbackManager.play { playSongAt(getPosition()) }
+        playbackManager.play { playSongAt(position) }
         if (notHandledMetaChangedForCurrentTrack) {
             handleChangeInternal(META_CHANGED)
             notHandledMetaChangedForCurrentTrack = false
@@ -901,7 +897,6 @@ class MusicService : MediaBrowserServiceCompat(),
         val originalDeletePosition = originalPlayingQueue.indexOf(song)
         if (originalDeletePosition != -1) {
             originalPlayingQueue.removeAt(originalDeletePosition)
-            rePosition(originalDeletePosition)
         }
     }
 
@@ -918,10 +913,9 @@ class MusicService : MediaBrowserServiceCompat(),
     }
 
     private fun rePosition(deletedPosition: Int) {
-        val currentPosition = getPosition()
-        if (deletedPosition < currentPosition) {
-            position = currentPosition - 1
-        } else if (deletedPosition == currentPosition) {
+        if (deletedPosition < position) {
+            position = position - 1
+        } else if (deletedPosition == position) {
             if (playingQueue.size > deletedPosition) {
                 setPosition(position)
             } else {
@@ -1053,7 +1047,7 @@ class MusicService : MediaBrowserServiceCompat(),
             .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.duration)
             .putLong(
                 MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER,
-                (getPosition() + 1).toLong()
+                (position + 1).toLong()
             )
             .putLong(MediaMetadataCompat.METADATA_KEY_YEAR, song.year.toLong())
             .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, null)
@@ -1315,7 +1309,7 @@ class MusicService : MediaBrowserServiceCompat(),
 
     private fun savePosition() {
         PreferenceManager.getDefaultSharedPreferences(this).edit {
-            putInt(SAVED_POSITION, getPosition())
+            putInt(SAVED_POSITION, position)
         }
     }
 

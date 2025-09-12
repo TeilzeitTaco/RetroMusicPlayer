@@ -18,7 +18,6 @@ import android.Manifest
 import android.content.*
 import android.os.Bundle
 import android.os.IBinder
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import code.name.monkey.appthemehelper.util.VersionUtils

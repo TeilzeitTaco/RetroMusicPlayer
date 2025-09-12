@@ -42,11 +42,11 @@ import kotlin.collections.set
 object MusicPlayerRemote : KoinComponent {
     val TAG: String = MusicPlayerRemote::class.java.simpleName
     private val mConnectionMap = WeakHashMap<Context, ServiceBinder>()
-    private val queuedSongs = ArraySet<Song>()
+    private val manuallyQueuedSongs = ArraySet<Song>()
 
-    private fun normalizeQueuedSongs() {
+    private fun normalizeManuallyQueuedSongs() {
         val oldQueue = playingQueue.filterIndexed { i, _ -> i <= position }
-        queuedSongs.removeIf { oldQueue.contains(it) }
+        manuallyQueuedSongs.removeIf { oldQueue.contains(it) }
     }
 
     var musicService: MusicService? = null
@@ -84,10 +84,10 @@ object MusicPlayerRemote : KoinComponent {
         }
 
     @JvmStatic
-    val playingQueue: List<Song>
+    val playingQueue: MutableList<Song>
         get() = if (isServiceConnected) {
-            musicService?.playingQueue as List<Song>
-        } else listOf()
+            musicService!!.playingQueue
+        } else arrayListOf()
 
     val songProgressMillis: Int
         get() = if (isServiceConnected) {
@@ -250,12 +250,12 @@ object MusicPlayerRemote : KoinComponent {
             // does it)
             val remainingManualQueueSongs = ArrayList<Song>()
             playingQueue.forEachIndexed { i, it ->
-                if (i > position && queuedSongs.contains(it) &&
+                if (i > position && manuallyQueuedSongs.contains(it) &&
                     !remainingManualQueueSongs.contains(it))
                     remainingManualQueueSongs.add(it)
             }
 
-            queuedSongs.clear()
+            manuallyQueuedSongs.clear()
             musicService?.openQueue(queue, startPosition, startPlaying)
             playNext(remainingManualQueueSongs, quiet = true)
             setShuffleMode(shuffleMode)
@@ -314,114 +314,116 @@ object MusicPlayerRemote : KoinComponent {
         return false
     }
 
-    fun playNext(song: Song, quiet: Boolean = false): Boolean {
-        normalizeQueuedSongs()
-        if (queuedSongs.contains(song))
-            return false
+    private fun playNextImpl(song: Song) {
+        manuallyQueuedSongs.add(song)
+        if (playingQueue.contains(song)) {
+            if (playingQueue.size == 1)
+                return
 
-        if (musicService != null) {
-            if (playingQueue.isNotEmpty()) {
-                if (position + 1 > playingQueue.lastIndex) {
-                    musicService?.addSong(song)
-                } else {
-                    musicService?.addSong(position + 1, song)
-                }
-
-                queuedSongs.add(song)
-            } else {
-                val queue = ArrayList<Song>()
-                queue.add(song)
-                openQueue(queue, 0, false)
-            }
-
-            if (!quiet)
-                musicService?.showToast(R.string.added_title_to_playing_queue)
-
-            return true
+            removeFromQueue(song)
         }
-        return false
+
+        insertOrAdd(song)
+    }
+
+    private fun insertOrAdd(song: Song) {
+        if (position + 1 > playingQueue.lastIndex) {
+            musicService?.addSong(song)
+        } else {
+            musicService?.addSong(position + 1, song)
+        }
+    }
+
+    fun playNext(song: Song, quiet: Boolean = false): Boolean {
+        musicService ?: return false
+        normalizeManuallyQueuedSongs()
+
+        if (playingQueue.isEmpty()) {
+            openQueue(arrayListOf(song), 0, false)
+        } else {
+            playNextImpl(song)
+        }
+
+        if (!quiet)
+            musicService?.showToast(R.string.added_title_to_playing_queue)
+
+        return true
     }
 
     @SuppressLint("StringFormatInvalid")
     fun playNext(songs: List<Song>, quiet: Boolean = false): Boolean {
-        var addedSongCount: Int
-        normalizeQueuedSongs()
-
         musicService ?: return false
+        normalizeManuallyQueuedSongs()
 
-        if (playingQueue.isNotEmpty()) {
-            val allNewSongs = songs.filter { !queuedSongs.contains(it) }
-            if (position + 1 > playingQueue.lastIndex) {
-                musicService?.addSongs(allNewSongs)
-            } else {
-                musicService?.addSongs(position + 1, allNewSongs)
-            }
-
-            queuedSongs.addAll(allNewSongs)
-            addedSongCount = allNewSongs.size
-        } else {
+        if (playingQueue.isEmpty()) {
             openQueue(songs, 0, false)
-            queuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
-            addedSongCount = songs.size
+            manuallyQueuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
+        } else {
+            songs.reversed().forEach(::playNextImpl)
         }
 
         if (!quiet) {
             val toast =
                 if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue)
-                else musicService!!.resources.getString(R.string.added_x_titles_to_playing_queue, addedSongCount)
+                else musicService!!.resources.getString(R.string.added_x_titles_to_playing_queue, songs.size)
             musicService?.showToast(toast, Toast.LENGTH_SHORT)
         }
 
         return true
     }
 
-    fun enqueue(song: Song): Boolean {
-        normalizeQueuedSongs()
-        if (queuedSongs.contains(song))
-            return false
+    private fun enqueueImpl(song: Song) {
+        manuallyQueuedSongs.add(song)
+        if (playingQueue.contains(song)) {
+            if (playingQueue.size == 1)
+                return
 
-        if (musicService != null) {
-            if (playingQueue.isNotEmpty()) {
-                musicService?.addSong(song)
-                queuedSongs.add(song)
-            } else {
-                openQueue(arrayListOf(song), 0, false)
-            }
-            musicService?.showToast(R.string.added_title_to_playing_queue)
-            return true
+            removeFromQueue(song)
         }
-        return false
+
+        musicService?.addSong(song)
+    }
+
+    fun enqueue(song: Song): Boolean {
+        musicService ?: return false
+        normalizeManuallyQueuedSongs()
+
+        if (playingQueue.isEmpty()) {
+            openQueue(arrayListOf(song), 0, false)
+        } else {
+            enqueueImpl(song)
+        }
+
+        musicService?.showToast(R.string.added_title_to_playing_queue)
+        return true
     }
 
     fun enqueue(songs: List<Song>): Boolean {
-        normalizeQueuedSongs()
-        if (musicService != null) {
-            if (playingQueue.isNotEmpty()) {
-                val allNewSongs = songs.filter { !queuedSongs.contains(it) }
-                musicService?.addSongs(allNewSongs)
-                queuedSongs.addAll(allNewSongs)
-            } else {
-                openQueue(songs, 0, false)
-                queuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
-            }
+        musicService ?: return false
+        normalizeManuallyQueuedSongs()
 
-            val toast =
-                if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue) else musicService!!.resources.getString(
-                    R.string.added_x_titles_to_playing_queue,
-                    songs.size
-                )
-
-            musicService?.showToast(toast)
-            return true
+        if (playingQueue.isNotEmpty()) {
+            songs.forEach(::enqueueImpl)
+        } else {
+            openQueue(songs, 0, false)
+            manuallyQueuedSongs.addAll(songs.filterIndexed { i, _ -> i > 0 })
         }
-        return false
+
+        val toast =
+            if (songs.size == 1) musicService!!.resources.getString(R.string.added_title_to_playing_queue) else musicService!!.resources.getString(
+                R.string.added_x_titles_to_playing_queue,
+                songs.size
+            )
+
+        musicService?.showToast(toast)
+        return true
     }
 
     @JvmStatic
     fun removeFromQueue(song: Song): Boolean {
         if (musicService != null) {
             musicService!!.removeSong(song)
-            queuedSongs.remove(song)
+            manuallyQueuedSongs.remove(song)
             return true
         }
         return false
@@ -431,7 +433,7 @@ object MusicPlayerRemote : KoinComponent {
     fun removeFromQueue(songs: List<Song>): Boolean {
         if (musicService != null) {
             musicService!!.removeSongs(songs)
-            queuedSongs.removeAll(songs)
+            manuallyQueuedSongs.removeAll(songs)
             return true
         }
         return false
@@ -440,7 +442,7 @@ object MusicPlayerRemote : KoinComponent {
     fun removeFromQueue(position: Int): Boolean {
         if (musicService != null && position >= 0 && position < playingQueue.size) {
             musicService!!.removeSong(position)
-            queuedSongs.remove(playingQueue[position])
+            manuallyQueuedSongs.remove(playingQueue[position])
             return true
         }
         return false
@@ -455,7 +457,7 @@ object MusicPlayerRemote : KoinComponent {
     }
 
     fun clearQueue(): Boolean {
-        queuedSongs.clear()
+        manuallyQueuedSongs.clear()
         if (musicService != null) {
             musicService!!.clearQueue()
             return true

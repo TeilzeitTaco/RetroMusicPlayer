@@ -499,8 +499,6 @@ class GradientPlayerFragment : AbsPlayerFragment(R.layout.fragment_gradient_play
     private fun setupRecyclerView() {
         playingQueueAdapter = PlayingQueueAdapter(
             requireActivity() as AppCompatActivity,
-            MusicPlayerRemote.playingQueue.toMutableList(),
-            MusicPlayerRemote.position,
             R.layout.item_queue
         )
         linearLayoutManager = LinearLayoutManager(requireContext())
@@ -544,12 +542,10 @@ class GradientPlayerFragment : AbsPlayerFragment(R.layout.fragment_gradient_play
     }
 
     private fun updateQueuePosition() {
-        playingQueueAdapter?.setCurrent(MusicPlayerRemote.position)
         resetToCurrentPosition()
     }
 
     private fun updateQueue() {
-        playingQueueAdapter?.swapDataSet(MusicPlayerRemote.playingQueue, MusicPlayerRemote.position)
         resetToCurrentPosition()
     }
 

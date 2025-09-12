@@ -26,8 +26,6 @@ import code.name.monkey.retromusic.glide.RetroGlideExtension.songCoverOptions
 import code.name.monkey.retromusic.glide.RetroMusicColoredTarget
 import code.name.monkey.retromusic.helper.MusicPlayerRemote
 import code.name.monkey.retromusic.helper.MusicPlayerRemote.isPlaying
-import code.name.monkey.retromusic.helper.MusicPlayerRemote.playNextSong
-import code.name.monkey.retromusic.helper.MusicPlayerRemote.removeFromQueue
 import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.util.MusicUtil
 import code.name.monkey.retromusic.util.ViewUtil
@@ -45,15 +43,11 @@ import me.zhanghai.android.fastscroll.PopupTextProvider
 
 class PlayingQueueAdapter(
     activity: FragmentActivity,
-    dataSet: MutableList<Song>,
-    private var current: Int,
     itemLayoutRes: Int,
-) : SongAdapter(activity, dataSet, itemLayoutRes),
+) : SongAdapter(activity, MusicPlayerRemote.playingQueue, itemLayoutRes),
     DraggableItemAdapter<PlayingQueueAdapter.ViewHolder>,
     SwipeableItemAdapter<PlayingQueueAdapter.ViewHolder>,
     PopupTextProvider {
-
-    private var songToRemove: Song? = null
 
     override fun createViewHolder(view: View): SongAdapter.ViewHolder {
         return ViewHolder(view)
@@ -64,7 +58,8 @@ class PlayingQueueAdapter(
         val song = dataSet[position]
         holder.time?.text = MusicUtil.getReadableDurationString(song.duration)
         if (holder.itemViewType == HISTORY) {
-            setAlpha(holder, 0.45f * (position.toFloat() / current.toFloat()) + 0.165f)
+            // this is the fade to black
+            setAlpha(holder, 0.45f * (position.toFloat() / MusicPlayerRemote.position.toFloat()) + 0.165f)
         } else if (holder.itemViewType == CURRENT) {
             Glide.with(activity)
                 .asBitmapPalette()
@@ -81,9 +76,9 @@ class PlayingQueueAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        if (position < current) {
+        if (position < MusicPlayerRemote.position) {
             return HISTORY
-        } else if (position > current) {
+        } else if (position > MusicPlayerRemote.position) {
             return UP_NEXT
         }
         return CURRENT
@@ -97,17 +92,6 @@ class PlayingQueueAdapter(
             .load(RetroGlideExtension.getSongModel(song))
             .songCoverOptions(song)
             .into(holder.image!!)
-    }
-
-    fun swapDataSet(dataSet: List<Song>, position: Int) {
-        this.dataSet = dataSet.toMutableList()
-        current = position
-        notifyDataSetChanged()
-    }
-
-    fun setCurrent(current: Int) {
-        this.current = current
-        notifyDataSetChanged()
     }
 
     private fun setAlpha(holder: SongAdapter.ViewHolder, alpha: Float) {
@@ -153,10 +137,6 @@ class PlayingQueueAdapter(
         notifyDataSetChanged()
     }
 
-    fun setSongToRemove(song: Song) {
-        songToRemove = song
-    }
-
     inner class ViewHolder(itemView: View) : SongAdapter.ViewHolder(itemView) {
         @DraggableItemStateFlags
         private var mDragStateFlags: Int = 0
@@ -174,19 +154,34 @@ class PlayingQueueAdapter(
         override fun onClick(v: View?) {
             if (!isPlaying)
                 MusicPlayerRemote.playSongAt(layoutPosition)
-            else
-                Toast.makeText(activity, "Press and hold to jump to song!", Toast.LENGTH_SHORT).show()
+            else {
+                toggleChecked(layoutPosition)
+            }
         }
 
         override fun onLongClick(v: View?): Boolean {
-            MusicPlayerRemote.playSongAt(layoutPosition)
+            if (isChecked(getIdentifier(layoutPosition)!!)) {
+                MusicPlayerRemote.removeFromQueue(checked)
+                MusicPlayerRemote.playNext(checked, true)
+                Toast.makeText(activity, "Moved ${checked.size} tracks to top of queue!",
+                    Toast.LENGTH_SHORT).show()
+                clearChecked()
+                maybeFinishActionMode()
+            } else {
+                if (isPlaying) {
+                    MusicPlayerRemote.playSongAt(layoutPosition)
+                } else {
+                    toggleChecked(layoutPosition)
+                }
+            }
             return true
         }
 
         override fun onSongMenuItemClick(item: MenuItem): Boolean {
             when (item.itemId) {
                 R.id.action_remove_from_playing_queue -> {
-                    removeFromQueue(layoutPosition)
+                    MusicPlayerRemote.removeFromQueue(layoutPosition)
+                    notifyDataSetChanged()
                     return true
                 }
             }
@@ -235,23 +230,19 @@ class PlayingQueueAdapter(
     override fun onSetSwipeBackground(holder: ViewHolder, position: Int, result: Int) {
     }
 
-    internal class SwipedResultActionRemoveItem(
+    inner class SwipedResultActionRemoveItem(
         private val adapter: PlayingQueueAdapter,
         private val position: Int,
     ) : SwipeResultActionRemoveItem() {
 
-        private var songToRemove: Song? = null
         override fun onPerformAction() {
             // currentlyShownSnackbar = null
         }
 
         override fun onSlideAnimationEnd() {
-            // initializeSnackBar(adapter, position, activity, isPlaying)
-            songToRemove = adapter.dataSet[position]
-
             // Swipe animation is much smoother when we do the heavy lifting after it's completed
-            adapter.setSongToRemove(songToRemove!!)
-            removeFromQueue(songToRemove!!)
+            MusicPlayerRemote.removeFromQueue(adapter.dataSet[position])
+            notifyDataSetChanged()
         }
     }
 }

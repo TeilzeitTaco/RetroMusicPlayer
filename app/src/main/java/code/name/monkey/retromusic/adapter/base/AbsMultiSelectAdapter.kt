@@ -17,7 +17,7 @@ abstract class AbsMultiSelectAdapter<V : RecyclerView.ViewHolder?, I>(
     open val activity: FragmentActivity, @MenuRes menuRes: Int,
 ) : RecyclerView.Adapter<V>(), ActionMode.Callback {
     var actionMode: ActionMode? = null
-    private val checked: MutableList<I> = ArrayList()
+    val checked: MutableList<I> = ArrayList()
     private var menuRes: Int
 
     override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -93,7 +93,7 @@ abstract class AbsMultiSelectAdapter<V : RecyclerView.ViewHolder?, I>(
         return true
     }
 
-    private fun clearChecked() {
+    fun clearChecked() {
         checked.clear()
         notifyDataSetChanged()
     }
@@ -122,7 +122,7 @@ abstract class AbsMultiSelectAdapter<V : RecyclerView.ViewHolder?, I>(
         this.menuRes = menuRes
     }
 
-    private fun maybeFinishActionMode(): Boolean {
+    fun maybeFinishActionMode(): Boolean {
         activity.supportFragmentManager.findFragmentById(R.id.miniPlayerFragment)?.view?.isClickable = true
         if (actionMode != null) {
             actionMode?.finish()
