@@ -94,7 +94,7 @@ class ColorPlaybackControlsFragment :
                 if (song.id != -1L)  // might be an invalid song
                     binding.progressSlider.setSampleFrom(song.uri)
                 else
-                    view!!.postDelayed(this, 150)
+                    view?.postDelayed(this, 150)
             }
         }, 300)
         
