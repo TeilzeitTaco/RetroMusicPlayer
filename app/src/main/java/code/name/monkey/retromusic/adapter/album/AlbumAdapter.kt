@@ -85,7 +85,11 @@ open class AlbumAdapter(
         val album = dataSet[position]
         val isChecked = isChecked(album)
         holder.itemView.isActivated = isChecked
-        holder.title?.text = getAlbumTitle(album)
+
+        holder.title?.text = if (!PreferenceUtil.anonymizeAlbumArt) { getAlbumTitle(album) } else {
+            getAlbumTitle(album).lowercase().replace(" ", "")
+        }
+
         holder.text?.text = getAlbumText(album)
         // Check if imageContainer exists so we can have a smooth transition without
         // CardView clipping, if it doesn't exist in current layout set transition name to image instead.

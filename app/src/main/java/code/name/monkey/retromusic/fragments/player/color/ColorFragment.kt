@@ -48,16 +48,18 @@ class ColorFragment : AbsPlayerFragment(R.layout.fragment_color_player) {
         get() = navigationColor
 
     override fun onColorChanged(color: MediaNotificationProcessor) {
-        libraryViewModel.updateColor(color.backgroundColor)
+        val targetColor = color.backgroundColor
+
+        libraryViewModel.updateColor(targetColor)
         lastColor = color.secondaryTextColor
         playbackControlsFragment.setColor(color)
-        navigationColor = color.backgroundColor
+        navigationColor = targetColor
 
-        binding.colorGradientBackground.setBackgroundColor(color.backgroundColor)
+        binding.colorGradientBackground.setBackgroundColor(targetColor)
         val animator =
             playbackControlsFragment.createRevealAnimator(binding.colorGradientBackground)
         animator.doOnEnd {
-            _binding?.root?.setBackgroundColor(color.backgroundColor)
+            _binding?.root?.setBackgroundColor(targetColor)
         }
         animator.start()
         binding.playerToolbar.post {

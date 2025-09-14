@@ -17,6 +17,7 @@ package code.name.monkey.retromusic.fragments.albums
 import android.app.ActivityOptions
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.*
 import android.widget.Toast
@@ -204,7 +205,14 @@ class AlbumDetailsFragment : AbsMainActivityFragment(R.layout.fragment_album_det
         }
         this.album = album
 
-        binding.albumTitle.text = album.title
+        if (PreferenceUtil.anonymizeAlbumArt) {
+            binding.albumTitle.text = album.title.lowercase().replace(" ", "")
+            binding.albumTitle.setTypeface(binding.albumTitle.typeface,
+                Typeface.ITALIC)
+        } else {
+            binding.albumTitle.text = album.title
+        }
+
         val songText = resources.getQuantityString(
             R.plurals.albumSongs,
             album.songCount,

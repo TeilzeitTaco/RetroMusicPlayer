@@ -226,7 +226,7 @@ class RetroExoPlayer(context: Context) : AudioManagerPlayback(context), Player.L
         player.release()
         player = ExoPlayer.Builder(context).build()
         player.setWakeMode(C.WAKE_MODE_LOCAL)
-        context.showToast(R.string.unplayable_file)
+        // context.showToast(error.toString())
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {

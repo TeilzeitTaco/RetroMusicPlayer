@@ -41,14 +41,13 @@ import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils
 
 class PlayingQueueFragment : AbsMusicServiceFragment(R.layout.fragment_playing_queue) {
 
-    private var _binding: FragmentPlayingQueueBinding? = null
-    private val binding get() = _binding!!
     private var wrappedAdapter: RecyclerView.Adapter<*>? = null
     private var recyclerViewDragDropManager: RecyclerViewDragDropManager? = null
     private var recyclerViewSwipeManager: RecyclerViewSwipeManager? = null
     private var recyclerViewTouchActionGuardManager: RecyclerViewTouchActionGuardManager? = null
     private var playingQueueAdapter: PlayingQueueAdapter? = null
     private lateinit var linearLayoutManager: LinearLayoutManager
+    private lateinit var binding: FragmentPlayingQueueBinding
 
     val mainActivity: MainActivity
         get() = activity as MainActivity
@@ -63,12 +62,13 @@ class PlayingQueueFragment : AbsMusicServiceFragment(R.layout.fragment_playing_q
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentPlayingQueueBinding.bind(view)
+        binding = FragmentPlayingQueueBinding.bind(view)
 
         setupToolbar()
         setUpRecyclerView()
 
         binding.clearQueue.setOnClickListener {
+            playingQueueAdapter?.maybeFinishActionMode()
             MusicPlayerRemote.clearQueue()
         }
         checkForPadding()
@@ -88,7 +88,6 @@ class PlayingQueueFragment : AbsMusicServiceFragment(R.layout.fragment_playing_q
         wrappedAdapter = wrappedAdapter?.let { recyclerViewSwipeManager?.createWrappedAdapter(it) }
 
         linearLayoutManager = LinearLayoutManager(requireContext())
-
 
         binding.recyclerView.apply {
             layoutManager = linearLayoutManager
@@ -154,53 +153,54 @@ class PlayingQueueFragment : AbsMusicServiceFragment(R.layout.fragment_playing_q
     }
 
     override fun onPause() {
-        if (recyclerViewDragDropManager != null) {
-            recyclerViewDragDropManager!!.cancelDrag()
-        }
+        playingQueueAdapter?.maybeFinishActionMode()
+        recyclerViewDragDropManager?.cancelDrag()
         super.onPause()
     }
 
     override fun onDestroy() {
-        if (recyclerViewDragDropManager != null) {
-            recyclerViewDragDropManager!!.release()
-            recyclerViewDragDropManager = null
-        }
-        if (recyclerViewSwipeManager != null) {
-            recyclerViewSwipeManager?.release()
-            recyclerViewSwipeManager = null
-        }
-        if (wrappedAdapter != null) {
+        playingQueueAdapter?.maybeFinishActionMode()
+
+        recyclerViewDragDropManager?.release()
+        recyclerViewDragDropManager = null
+        recyclerViewSwipeManager?.release()
+        recyclerViewSwipeManager = null
+
+        if (wrappedAdapter != null)
             WrapperAdapterUtils.releaseAll(wrappedAdapter)
-            wrappedAdapter = null
-        }
+        wrappedAdapter = null
+
         playingQueueAdapter = null
         super.onDestroy()
+
         if (MusicPlayerRemote.playingQueue.isNotEmpty())
             mainActivity.expandPanel()
     }
 
     private fun setupToolbar() {
-        binding.appBarLayout.toolbar.subtitle = getUpNextAndQueueTime()
-        binding.appBarLayout.toolbar.isTitleCentered = false
-        binding.clearQueue.backgroundTintList = ColorStateList.valueOf(accentColor())
-        ColorStateList.valueOf(
-            MaterialValueHelper.getPrimaryTextColor(
-                requireContext(),
-                ColorUtil.isColorLight(accentColor())
-            )
-        ).apply {
-            binding.clearQueue.setTextColor(this)
-            binding.clearQueue.iconTint = this
-        }
-        binding.appBarLayout.pinWhenScrolled()
-        binding.appBarLayout.toolbar.apply {
-            setNavigationOnClickListener {
-                findNavController().navigateUp()
+        with(binding) {
+            appBarLayout.toolbar.subtitle = getUpNextAndQueueTime()
+            appBarLayout.toolbar.isTitleCentered = false
+            clearQueue.backgroundTintList = ColorStateList.valueOf(accentColor())
+            ColorStateList.valueOf(
+                MaterialValueHelper.getPrimaryTextColor(
+                    requireContext(),
+                    ColorUtil.isColorLight(accentColor())
+                )
+            ).apply {
+                clearQueue.setTextColor(this)
+                clearQueue.iconTint = this
             }
-            setTitle(R.string.now_playing_queue)
-            setTitleTextAppearance(context, R.style.ToolbarTextAppearanceNormal)
-            setNavigationIcon(R.drawable.ic_arrow_back)
-            ToolbarContentTintHelper.colorBackButton(this)
+            appBarLayout.pinWhenScrolled()
+            appBarLayout.toolbar.apply {
+                setNavigationOnClickListener {
+                    findNavController().navigateUp()
+                }
+                setTitle(R.string.now_playing_queue)
+                setTitleTextAppearance(context, R.style.ToolbarTextAppearanceNormal)
+                setNavigationIcon(R.drawable.ic_arrow_back)
+                ToolbarContentTintHelper.colorBackButton(this)
+            }
         }
     }
 }

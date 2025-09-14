@@ -36,7 +36,7 @@ import com.bumptech.glide.request.transition.DrawableCrossFadeFactory
 import com.bumptech.glide.request.transition.Transition
 import com.bumptech.glide.signature.MediaStoreSignature
 import jp.wasabeef.glide.transformations.gpu.PixelationFilterTransformation
-import jp.wasabeef.glide.transformations.gpu.SepiaFilterTransformation
+import jp.wasabeef.glide.transformations.GrayscaleTransformation
 import java.io.File
 
 
@@ -116,8 +116,8 @@ object RetroGlideExtension {
         if (PreferenceUtil.anonymizeAlbumArt)
             return options
                 .transform(MultiTransformation(
-     PixelationFilterTransformation(30f),
-                    SepiaFilterTransformation(0.65f)
+     PixelationFilterTransformation(42f),
+                    GrayscaleTransformation()
                 ))
         return options
     }
